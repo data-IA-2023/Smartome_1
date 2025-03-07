@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+  <div class="align">
+    <div class="grid">
+      <h1>Se connecter</h1>
+      <form method="post" class="form login">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        {{ form.as_p }}
+        <button type="submit">Se connecter</button>
+      </form>
+    </div>
+  </div>
+{% endblock %}

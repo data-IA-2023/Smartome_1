@@ -1,0 +1,39 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{% static 'styles.css' %}">
+    <script src="{% static 'script.js' %}"></script>
+      
+      
+</head>
+<body>
+    <nav>
+        
+        {% if not user.is_authenticated %}
+            {% if request.resolver_match.url_name != 'inscription' %}
+                <a href="{% url 'inscription' %}">Inscription</a>
+            {% endif %}
+            {% if request.resolver_match.url_name != 'connexion' %}
+                <a href="{% url 'connexion' %}">Connexion</a>
+            {% endif %}
+        {% else %}
+            {% if request.resolver_match.url_name != 'deconnexion' %}
+                <a href="{% url 'deconnexion' %}">Déconnexion</a>
+            {% endif %}
+            {% if request.resolver_match.url_name != 'accueil' %}
+                <a href="{% url 'accueil' %}">{% block title %}Auto_ML{% endblock %}</a>
+            {% endif %}
+            {% if request.resolver_match.url_name != 'projets' %}
+                <a href="{% url 'projets' %}">projets</a>
+            {% endif %}
+            
+        {% endif %}
+
+
+    
+    {% block content %}{% endblock %}
+</body>
+</html>

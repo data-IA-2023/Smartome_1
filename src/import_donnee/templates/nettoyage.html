@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        nav a {
+            margin-right: 15px;
+            text-decoration: none;
+        }
+
+        nav a:hover {
+            text-decoration: underline;
+        }
+
+        nav form {
+            margin: 0;
+            display: inline;
+        }
+
+        nav button {
+            background: none; /* Supprime le fond */
+            border: none; /* Supprime le cadre */
+            padding: 0; /* Supprime les marges internes */
+            margin: 0; /* Supprime les marges externes */
+            font-size: 13px; /* Inhère la taille de la police */
+            color: #611f9f;
+            cursor: pointer; /* Ajoute le curseur de clic */
+            text-decoration: none; /* Supprime tout soulignement */
+        }
+
+        nav button:hover {
+            text-decoration: underline; /* Ajoute un soulignement au survol */
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        .project-details {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+
+        .project-title {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .project-content {
+            margin-top: 20px;
+        }
+
+        .project-details-table {
+            max-width: 1700px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .button-group {
+            display: flex;
+            justify-content: center; /* Centrer les boutons horizontalement */
+            gap: 10px; /* Espacement entre les boutons */
+            margin-top: 15px; /* Ajout d'un espacement avec la barre de sélection */
+        }
+
+        .button-group .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            color: white;
+        }
+
+        .button-group .btn.btn-primary {
+            background-color: #007BFF;
+        }
+
+        .button-group .btn.btn-success {
+            background-color: #28A745;
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.21/css/jquery.dataTables.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+</head>
+<body>
+    <nav>
+        
+        {% if not user.is_authenticated %}
+        <a href="{% url 'inscription' %}">Inscription</a>
+        <a href="{% url 'connexion' %}">Connexion</a>
+        {% endif %}
+        {% if user.is_authenticated %}
+        <a href="{% url 'deconnexion' %}">Déconnexion</a>
+        <a href="{% url 'accueil' %}">Accueil</a>
+        <a href="{% url 'projects' %}">Projects</a>
+        {% endif %}
+
+        <form method="post" action="{% url 'cleanning' %}">
+            {% csrf_token %}
+            <input type="hidden" name="project_name" value="{{ project_name }}">
+            <input type="hidden" name="dataset_name" value="{{ dataset_name }}">
+            <div class="button-group">
+                <button type="submit" class="btn btn-primary">Revenir à vos datas</button>
+            </div>
+        </form>
+    </nav>
+
+    <div class="project-details">
+        <h1>Projet: {{ project_name }}</h1>
+        <h1>Nettoyage du Dataset: {{ dataset_name }}</h1>
+    </div>
+    <div class="project-details">
+        <div class="project-content">
+            <h2 style="text-align: center;">Suppression des doublons et typage des colonnes</h2>
+            <form method="post" action="{% url 'imputation' %}">
+                {% csrf_token %}
+                <input type="hidden" name="project_name" value="{{ project_name }}">
+                <input type="hidden" name="dataset_name" value="{{ dataset_name }}">
+                {% if action == "action1" %}
+                {% if messages %}
+                {% for message in messages %}
+                    <div class="message {% if message.tags %} {{ message.tags }} {% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+                {% endif %}
+                {% endif %}
+                <div class="button-group">
+                    <button type="submit" name="action" value="action1">Supprimer les lignes dupliquées</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="project-details">
+        <div class="project-content">
+            <h2 style="text-align: center;">Gestion des valeurs manquantes</h2>
+            <form method="post" action="{% url 'imputation' %}">
+                {% csrf_token %}
+                <label for="column">Column:</label>
+                <input type="hidden" name="project_name" value="{{ project_name }}">
+                <input type="hidden" name="dataset_name" value="{{ dataset_name }}">
+                <select id="column" name="column" required>
+                    <option value="" disabled selected>Sélectionnez une colonne</option>
+                    {% for column, column_type in columns_with_types %}
+                        <option value="{{ column }}" data-type="{{ column_type }}">{{ column }}</option>
+                    {% endfor %}
+                </select><br><br>
+
+                <label for="strategy">Strategy:</label>
+                <select id="strategy" name="strategy" required>
+                    <option value="" disabled selected>Sélectionnez une stratégie</option>
+                    <option value="mean">Mean</option>
+                    <option value="median">Median</option>
+                    <option value="mode">Mode</option>
+                    <option value="drop">Drop</option>
+                    <option value="replace">Replace</option>
+                </select><br><br>
+                {% if action == "action2" %}
+                {% if messages %}
+                {% for message in messages %}
+                    <div class="message {% if message.tags %} {{ message.tags }} {% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+                {% endif %}
+                {% endif %}
+                <div id="replace-value-container" style="display: none;">
+                    <label for="replace_value">Replace Value:</label>
+                    <input type="text" id="replace_value" name="replace_value">
+                </div>
+
+                <div class="button-group">
+                    <button type="submit" name="action" value="action2">Exécuter</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="project-details">
+        <div class="project-content">
+            <h2 style="text-align: center;">Gestion des Outliers</h2>
+            <form method="post" action="{% url 'imputation' %}">
+                {% csrf_token %}
+                <input type="hidden" name="project_name" value="{{ project_name }}">
+                <input type="hidden" name="dataset_name" value="{{ dataset_name }}">
+    
+                <label for="outlier_column">Choisissez une colonne avec des outliers:</label>
+                <select id="outlier_column" name="outlier_column" required>
+                    <option value="" disabled selected>Sélectionnez une colonne</option>
+                    {% for info in outlier_info %}
+                        <option value="{{ info.column }}">
+                            {{ info.column }} (Outliers: {{ info.outliers_count }})
+                        </option>
+                    {% endfor %}
+                </select><br><br>
+    
+                <!-- Affichage des indices des outliers -->
+                <div id="outlier_indices_container" style="display: none;">
+                    <label for="outlier_indices">Indices des lignes avec des outliers:</label>
+                    <input type="text" id="outlier_indices" name="outlier_indices" readonly>
+                </div><br>
+    
+                <!-- Choisir une action à réaliser -->
+                <label for="outlier_action">Action à réaliser:</label>
+                <select id="outlier_action" name="outlier_action" required>
+                    <option value="" disabled selected>Sélectionnez une action</option>
+                    <option value="drop">Supprimer les outliers</option>
+                    <option value="replace">Remplacer les outliers</option>
+                    <option value="impute">Imputer les outliers</option>
+                </select><br><br>
+    
+                <!-- Afficher les champs de remplacement si l'action choisie est "Replace" -->
+                <div id="replace-value-container" style="display: none;">
+                    <label for="replace_value">Valeur à remplacer:</label>
+                    <input type="text" id="replace_value" name="replace_value" required><br><br>
+                    <label for="new_value">Nouvelle valeur:</label>
+                    <input type="text" id="new_value" name="new_value" required>
+                </div>
+    
+                <!-- Afficher les stratégies d'imputation si l'action choisie est "Impute" -->
+                <div id="impute-strategy-container" style="display: none;">
+                    <label for="impute_strategy">Stratégie d'imputation:</label>
+                    <select id="impute_strategy" name="impute_strategy" required>
+                        <option value="" disabled selected>Sélectionnez une stratégie d'imputation</option>
+                        <option value="mean">Moyenne</option>
+                        <option value="median">Médiane</option>
+                        <option value="mode">Mode</option>
+                    </select><br><br>
+                </div>
+    
+                <div class="button-group">
+                    <button type="submit" name="action" value="action_outliers">Exécuter</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+  
+    
+    <div class="project-details">
+        <div class="project-content">
+            <h2 style="text-align: center;">Remplacement de valeurs spécifiques</h2>
+            <form method="post" action="{% url 'imputation' %}">
+                {% csrf_token %}
+                <label for="column">Column:</label>
+                <input type="hidden" name="project_name" value="{{ project_name }}">
+                <input type="hidden" name="dataset_name" value="{{ dataset_name }}">
+                <select id="column" name="column" required>
+                    <option value="" disabled selected>Sélectionnez une colonne</option>
+                    {% for column, column_type in columns_with_types %}
+                        <option value="{{ column }}" data-type="{{ column_type }}">{{ column }}</option>
+                    {% endfor %}
+                </select><br><br>
+                <div>
+                    <label for="old_value">Valeur à remplacer:</label>
+                    <input type="text" id="old_value" name="old_value" required>
+                </div>
+                <div>
+                    <label for="new_value">Nouvelle valeur:</label>
+                    <input type="text" id="new_value" name="new_value" required>
+                </div>
+                {% if action == "action3" %}
+                {% if messages %}
+                {% for message in messages %}
+                    <div class="message {% if message.tags %} {{ message.tags }} {% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+                {% endif %}
+                {% endif %}
+                <div class="button-group">
+                    <button type="submit" name="action" value="action3">Exécuter</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+
+
+
+    <div class="project-details">
+        <div class="project-content">
+            <h2 style="text-align: center;">Encodage catégorique</h1>
+            <form method="post" action="{% url 'imputation' %}">
+                {% csrf_token %}
+                <label for="columns">Colonnes disponibles :</label>
+                <input type="hidden" name="project_name" value="{{ project_name }}">
+                <input type="hidden" name="dataset_name" value="{{ dataset_name }}">
+                <select class="columns" id="columns_cat" name="columns_cat" multiple="multiple" style="width: 100%;">
+                    {% for col in object_columns %}
+                        <option value="{{ col }}">{{ col }}</option>
+                    {% endfor %}
+                </select>
+            
+                <!-- Méthode d'encodage -->
+                <h3>Méthode d'encodage :</h3>
+                {% for value, label in encoding_methods %}
+                    <label>
+                        <input type="radio" name="encoding_method" value="{{ value }}">
+                        {{ label }}
+                    </label><br>
+                {% endfor %}
+                
+                {% if action == "action4" %}
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="message {% if message.tags %} {{ message.tags }} {% endif %}">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endif %}
+                <div class="button-group">
+                    <button type="submit" name="action" value="action4">Exécuter</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="project-details">
+        <div class="project-content">
+            <h2 style="text-align: center;">Encodage numérique</h1>
+            <form method="post" action="{% url 'imputation' %}">
+                {% csrf_token %}
+                <label for="columns">Colonnes disponibles :</label>
+                <input type="hidden" name="project_name" value="{{ project_name }}">
+                <input type="hidden" name="dataset_name" value="{{ dataset_name }}">
+                <select class="columns" id="columns_num" name="columns_num" multiple="multiple" style="width: 100%;">
+                    {% for col in numeric_columns %}
+                        <option value="{{ col }}">{{ col }}</option>
+                    {% endfor %}
+                </select>
+            
+                <!-- Méthode d'encodage -->
+                <h3>Méthode d'encodage :</h3>
+                {% for value, label in encoding_methods_numerique %}
+                    <label>
+                        <input type="radio" name="encoding_method" value="{{ value }}">
+                        {{ label }}
+                    </label><br>
+                {% endfor %}
+                
+                {% if action == "action5" %}
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="message {% if message.tags %} {{ message.tags }} {% endif %}">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endif %}
+                <div class="button-group">
+                    <button type="submit" name="action" value="action5">Exécuter</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var columnSelect = document.getElementById('column');
+            var strategySelect = document.getElementById('strategy');
+            var replaceValueContainer = document.getElementById('replace-value-container');
+
+            columnSelect.addEventListener('change', function() {
+                var columnType = this.options[this.selectedIndex].getAttribute('data-type');
+                strategySelect.innerHTML = '<option value="" disabled selected>Sélectionnez une stratégie</option>';
+
+                var options = [];
+                if (columnType === 'int64' || columnType === 'float64') {
+                    options = ['mean', 'median', 'mode', 'drop'];
+                } else if (columnType === 'object') {
+                    options = ['mode', 'drop', 'replace'];
+                } else {
+                    options = ['drop'];
+                }
+
+                options.forEach(function(option) {
+                    var opt = document.createElement('option');
+                    opt.value = option;
+                    opt.text = option.charAt(0).toUpperCase() + option.slice(1);
+                    strategySelect.add(opt);
+                });
+
+                // Show or hide the replace value input based on the selected strategy
+                if (options.includes('replace')) {
+                    replaceValueContainer.style.display = 'none';
+                } else {
+                    replaceValueContainer.style.display = 'none';
+                }
+            });
+
+            strategySelect.addEventListener('change', function() {
+                var selectedStrategy = this.value;
+                if (selectedStrategy === 'replace') {
+                    replaceValueContainer.style.display = 'block';
+                } else {
+                    replaceValueContainer.style.display = 'none';
+                }
+            });
+        });
+        $(document).ready(function() {
+            $('.columns').select2({
+                placeholder: "Sélectionnez des colonnes",
+                allowClear: true
+            });
+        });
+        document.addEventListener('DOMContentLoaded', function() {
+    var outlierActionSelect = document.getElementById('outlier_action');
+    var replaceValueContainer = document.getElementById('replace-value-container');
+    var imputeStrategyContainer = document.getElementById('impute-strategy-container');
+    
+    outlierActionSelect.addEventListener('change', function() {
+        var selectedAction = this.value;
+
+        // Masquer les deux conteneurs
+        replaceValueContainer.style.display = 'none';
+        imputeStrategyContainer.style.display = 'none';
+
+        // Afficher la section appropriée en fonction de l'action choisie
+        if (selectedAction === 'replace') {
+            replaceValueContainer.style.display = 'block';  // Afficher le champ de remplacement
+        } else if (selectedAction === 'impute') {
+            imputeStrategyContainer.style.display = 'block';  // Afficher les stratégies d'imputation
+        }
+    });
+});
+    
+
+    
+    </script>
+</body>
+</html>

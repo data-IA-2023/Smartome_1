@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .project-details {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+        .project-title {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .project-content {
+            margin-top: 20px;
+        }
+        .project-details-table {
+            max-width: 1700px; 
+            margin: 0 auto; 
+            padding: 20px; 
+        }
+        .button-group {
+            display: flex;
+            justify-content: center; /* Centrer les boutons horizontalement */
+            gap: 10px; /* Espacement entre les boutons */
+            margin-top: 15px; /* Ajout d'un espacement avec la barre de sélection */
+        }
+
+        .button-group .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            color: white;
+        }
+
+        .button-group .btn.btn-primary {
+            background-color: #007BFF;
+        }
+
+        .button-group .btn.btn-success {
+            background-color: #28A745;
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.21/css/jquery.dataTables.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
+</head>
+<body>
+    <nav>
+        {% if user.is_authenticated %}
+        <a href="{% url 'accueil' %}">Accueil</a>
+        <a href="{% url 'deconnexion' %}">Déconnexion</a>
+        {% endif %}
+        {% if not user.is_authenticated %}
+        <a href="{% url 'inscription' %}">Inscription</a>
+        <a href="{% url 'connexion' %}">Connexion</a>
+        {% endif %}
+       
+      
+</nav>
+<form method="post" action="{% url 'projects' %}">
+    {% csrf_token %}
+    <div class="button-group">
+        <button type="submit" class="btn btn-primary">Revenir à vos projets</button>
+    </div>
+</form>
+
+
+<div class="project-details">
+    
+    <div class="project-content">
+        <h1>Projet : {{ project_name|slice:":30" }}{% if project_name|length > 30 %}...{% endif %}</h1>
+        <form method="post" enctype="multipart/form-data" action="{% url 'upload_fichier' %}">
+            {% csrf_token %}
+            <input type="hidden" name="projet_name" value="{{ project_name }}">
+            <!-- Champ de téléchargement de fichier -->
+            <label for="file">Choisir un fichier :</label>
+            <input type="file" name="file" id="file" required>
+            
+            <!-- Champ séparateur -->
+            <label for="separator">Séparateur :</label>
+            <select name="separator" id="separator">
+                <option value=",">Virgule</option>
+                <option value=";">Point-virgule</option>
+            </select>
+            
+            <button type="submit">Télécharger</button>
+        </form>
+
+        
+        {% if messages %}
+             <ul>
+        {% for message in messages %}
+            <li>{{ message }}</li>
+        {% endfor %}
+         </ul>
+        {% endif %}
+    </div>
+    
+</div>
+
+
+<div class="project-details">
+    <form method="post" action="{% url 'dataset_info' %}">
+        {% csrf_token %}
+        <fieldset style="border: 1px solid #ccc; padding: 10px; border-radius: 5px;">
+            <legend style="font-weight: bold;">Choisir un Dataset</legend>
+            <label for="selected_dataset" style="display: block; margin-bottom: 8px;">
+                <strong>Liste des datasets :</strong>
+            </label>
+            <select name="selected_dataset" id="selected_dataset" required style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ccc;">
+                <!-- Option par défaut désactivée -->
+                <option value="" disabled {% if not dataset_name %}selected{% endif %}>
+                    Sélectionner un dataset à afficher
+                </option>
+                <!-- Boucle sur les datasets -->
+                {% for dataset in dataset_names %}
+                    <option value="{{ dataset }}" {% if dataset_name == dataset %}selected{% endif %}>
+                        {{ dataset }}
+                    </option>
+                {% endfor %}
+            </select>
+            <input type="hidden" name="dataset_name" value="{{ dataset }}">
+            <input type="hidden" name="project_name" value="{{ project_name }}">
+            <div class="button-group" style="margin-top: 15px;">
+                <button type="submit" name="action" value="action3" class="btn btn-primary">
+                    Suppression des données
+                </button>
+                <button type="submit" name="action" value="action1" class="btn btn-primary">
+                    Affichage des données
+                </button>
+                <button type="submit" name="action" value="action2" class="btn btn-success">
+                    Nettoyage des données
+                </button>
+                <button type="submit" name="action" value="action4" class="btn btn-success">
+                    Visualisation des données
+                </button>
+                <button type="submit" name="action" value="action6" class="btn btn-success">
+                    Modélisation
+                </button>
+            </div>
+        </fieldset>
+    </form>
+
+    {% if outlier_info %}
+<div class="project-details">
+    <h1>Informations sur les Outliers</h1>
+    
+    <div class="table-container">
+        <table id="outliers-table">
+            <thead>
+                <tr>
+                    <th>Colonne</th>
+                    <th>Nombre d'Outliers</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in outlier_info %}
+                    <tr>
+                        <td style="text-align: center;">{{ item.column }}</td>
+                        <td style="text-align: center;">{{ item.outliers_count }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
+{% endif %}
+</div>
+{% if dataset_name %}
+{% if ligne %}
+
+<div style="margin-top: 20px;" class="project-details">
+    <h2>Informations sur le Dataset : {{ dataset_name }}</h2>
+    <ul>
+        <li><strong>Nombre de lignes :</strong> {{ ligne }}</li>
+        <li><strong>Nombre de colonnes :</strong> {{ colonne }}</li>
+        <li><strong>Colonnes dupliquées :</strong> {{ nb_colonne_double }}</li>
+    </ul>
+    <h3>Nombre de valeurs nulles par colonne :</h3>
+    <div>
+        {{ nb_nul|safe }}
+    </div>
+</div>
+
+<!-- Section pour afficher le tableau des données -->
+<div class="project-details project-details-table" style="margin-top: 20px;">
+    <h3>Contenu du Dataset :</h3>
+    <div style="overflow-x: auto;"><!--<div style="width: 1000px; margin: 0 auto; overflow-x: auto;"></div>-->
+        {{ table_html|safe }}
+    </div>
+</div>
+{% endif %}
+{% endif %}
+
+
+<script>
+    $(window).on('load', function() {
+    // Lorsque la fenêtre est complètement chargée, initialisez DataTables
+    $('#dataframe-table').DataTable({
+        paging: true,
+        lengthMenu: [5, 10, 25, 50, 75, 100]
+    });
+});
+
+
+    $(document).ready(function() {
+        $('#outliers-table').DataTable({
+            paging: true,
+            lengthMenu: [10, 25, 50, 75, 100]
+        });
+    });
+   
+</script>
+</body>
+</html>
+

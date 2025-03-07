@@ -1,0 +1,88 @@
+.nav_police_black {
+    font-size: 2em;
+    color: white;
+    text-decoration: None;
+    padding-right: 1em;
+    padding-left: 1em;
+    border-radius: 10px;
+    border: 2px solid rgb(96, 39, 29);
+    display:grid;
+}
+.nav_police_black:hover {
+    background-color: rgb(152, 63, 47);
+}
+.nav_police_black:active {
+    background-color: rgb(31, 12, 8);
+}
+.nav_black {
+    background-color: rgb(104, 16, 16) ;
+    padding: 0.5em;
+    display:flex;
+    border-radius: 10px;
+    box-shadow: 6px 6px 0px rgba(0, 0, 0);
+}
+.a_nav_black {
+    text-decoration: None;
+    color: white;
+    font-family: 'Playfair Display', sans-serif;
+}
+
+.test {
+    height: 20px;
+    background-color: black;
+    width:20px;
+    cursor: grab;
+    display: inline-block;
+}
+
+.test_place {
+    width:200px;
+    height:200px;
+    border:4px solid black;
+    position:relative;
+}
+
+.menu {
+    width: 200px;
+    background-color: rgb(62, 41, 111);
+    padding: 15px;
+    border-radius: 5px;
+}
+
+.menu ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+.menu_element {
+    color: white;
+    text-decoration: none;
+    display: block;
+    padding: 10px;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+}
+
+.menu_element:hover {
+    background-color: #b7a3a3;
+}
+
+.sous_menu {
+    display: none; /* Masquer le sous-menu par défaut */
+    padding-left: 20px; /* Indentation pour le sous-menu */
+}
+
+.sous_menu li a {
+    background-color: #f6eded;
+}
+
+.sous_menu li a:hover {
+    background-color: #ab3737;
+}
+
+.element_du_menu {
+    color:black;
+    text-decoration: None;
+}
+

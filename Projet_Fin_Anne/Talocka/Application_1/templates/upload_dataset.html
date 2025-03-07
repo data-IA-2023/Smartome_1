@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<h1>Uploader un Dataset</h1>
+
+  <form method="POST" enctype="multipart/form-data" action = "{% url 'upload_dataset' projet.id %}">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" name="upload_dataset">Uploader le dataset</button>
+  </form>
+  {% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+            <div class="message {% if message.tags %} {{ message.tags }} {% endif %}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+<h2>Liste des datasets</h2>
+<ul>
+  {% for dataset in datasets %}
+    <li>
+      {{ dataset.dataset_name }} 
+      <form action="{% url 'delete_dataset' dataset.id %}" method="POST" style="display:inline;">
+        {% csrf_token %}
+        <button type="submit" onclick="return confirm('Voulez-vous vraiment supprimer ce dataset ?');">
+          Supprimer
+        </button>
+      </form>
+    </li>
+  {% empty %}
+    <li>Aucun dataset disponible.</li>
+  {% endfor %}
+</ul>
+
+
+{% endblock %}

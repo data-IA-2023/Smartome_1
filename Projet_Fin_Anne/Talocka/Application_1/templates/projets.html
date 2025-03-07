@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<h1>Projets</h1>
+
+<!-- Formulaire de création de projet -->
+<form method="POST" action="{% url 'create_projet' %}">
+    {% csrf_token %}
+    {{ form.as_p }}
+
+    <!-- Affichage des messages -->
+    {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+                <div class="message {% if message.tags %} {{ message.tags }} {% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <button type="submit">Créer le projet</button>
+</form>
+
+<div class="projects-container">
+    {% for project in projets_list %}
+        <div class="project-card">
+            <h3 class="project-title">{{ project.name|slice:":30" }}{% if project.name|length > 30 %}...{% endif %}</h3>
+            <p class="project-description">{{ project.description|slice:":30" }}{% if project.description|length > 30 %}...{% endif %}</h3></p>
+            <div class="button-group">
+                <form method="post" action="{% url 'upload_dataset' project.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-primary">C'est parti !</button>
+                </form>
+                <form method="post" action="{% url 'modifier_projet' project.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-warning">Modifier</button>
+                </form>
+                <form method="post" action="{% url 'delete_projet' %}">
+                    {% csrf_token %}
+                    <button type="submit" name="Supprimer" value="{{ project.id }}" class="btn btn-danger"
+                        onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce projet ? Cette action est irréversible.')">
+                        Supprimer
+                    </button>
+                </form>
+            </div>
+        </div>
+    {% endfor %}
+</div>
+
+{% endblock %}

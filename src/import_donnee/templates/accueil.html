@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .project-details {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+        .project-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        .form-section {
+            margin-top: 20px;
+        }
+        .form-section label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+        .form-section input,
+        .form-section select {
+            width: 300px; /* Largeur commune */
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            font-size: 16px; /* Harmoniser la taille de la police */
+            box-sizing: border-box; /* Inclure le padding et la bordure dans la largeur */
+            appearance: none; /* Supprimer le style par défaut des navigateurs pour <select> */
+        }
+        .form-section select {
+            background-color: white; /* Fond blanc pour uniformité */
+        }
+        .form-section button {
+            width: 150px; /* Largeur commune */
+            height: 40px; /* Hauteur commune */
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .btn-primary {
+            background-color: #007BFF;
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+        .btn-danger {
+            background-color: #dc3545;
+            color: white;
+        }
+        .btn-danger:hover {
+            background-color: #a71d2a;
+        }
+        .message {
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #007BFF;
+            border-radius: 4px;
+            background-color: #e9f5ff;
+            color: #007BFF;
+        }
+        .form-section select {
+            color: #000; /* Couleur par défaut */
+            font-style: normal; /* Style par défaut */
+        }
+
+        .form-section select option[value=""] {
+            color: #aaa; /* Couleur grisée */
+            font-style: italic; /* Style pour l'option par défaut */
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        {% if not user.is_authenticated %}
+        <a href="{% url 'inscription' %}">Inscription</a>
+        <a href="{% url 'connexion' %}">Connexion</a>
+        {% endif %}
+        {% if user.is_authenticated %}
+        <a href="{% url 'deconnexion' %}">Déconnexion</a>
+        <a href="{% url 'projects' %}">Projects</a>
+        {% endif %}
+    </nav>
+    <h1>Accueil</h1>
+    <div class="project-details">
+        
+
+        <div class="form-section">
+            <h2>Créer un nouveau projet</h2>
+            <form method="post" action="{% url 'create_project' %}">
+                {% csrf_token %}
+                <label for="project_name">Nom du projet :</label>
+                <input type="text" id="project_name" name="project_name" placeholder="Entrez votre nom de projet" required>
+                <button type="submit" class="btn-primary">Créer</button>
+            </form>
+        </div>
+
+        <div class="form-section">
+            <h2>Supprimer un projet</h2>
+            <form method="post" action="{% url 'delete_project' %}">
+                {% csrf_token %}
+                <label for="project_name">Sélectionner un projet à supprimer :</label>
+                <select name="project_name" id="project_name" required>
+                    <option value="" disabled selected>Choisir un projet</option>
+                    {% for project_name in project_names %}
+                    <option value="{{ project_name }}">{{ project_name }}</option>
+                    {% endfor %}
+                </select>
+                <button type="submit" class="btn-danger">Supprimer</button>
+            </form>
+        </div>
+
+        {% if messages %}
+        {% for message in messages %}
+        <div class="message">{{ message }}</div>
+        {% endfor %}
+        {% endif %}
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const selectElement = document.querySelector('.form-section select');
+            selectElement.addEventListener('change', function () {
+                if (this.value === "") {
+                    this.style.color = '#aaa';
+                    this.style.fontStyle = 'italic';
+                } else {
+                    this.style.color = '#000';
+                    this.style.fontStyle = 'normal';
+                }
+            });
+    
+            // Initial style setup
+            if (selectElement.value === "") {
+                selectElement.style.color = '#aaa';
+              
+            }
+        });
+    </script>
+</body>
+</html>
+

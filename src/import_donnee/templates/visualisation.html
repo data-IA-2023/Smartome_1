@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        nav a {
+            margin-right: 15px;
+            text-decoration: none;
+        }
+
+        nav a:hover {
+            text-decoration: underline;
+        }
+
+        nav form {
+            margin: 0;
+            display: inline;
+        }
+
+        nav button {
+            background: none; /* Supprime le fond */
+            border: none; /* Supprime le cadre */
+            padding: 0; /* Supprime les marges internes */
+            margin: 0; /* Supprime les marges externes */
+            font-size: 13px; /* Inhère la taille de la police */
+            color: #611f9f;
+            cursor: pointer; /* Ajoute le curseur de clic */
+            text-decoration: none; /* Supprime tout soulignement */
+        }
+
+        nav button:hover {
+            text-decoration: underline; /* Ajoute un soulignement au survol */
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        .project-details {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+
+        .project-title {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .project-content {
+            margin-top: 20px;
+        }
+
+        .project-details-table {
+            max-width: 1700px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .button-group {
+            display: flex;
+            justify-content: center;
+            align-items: center; /* Assurer l'alignement vertical des boutons */
+            gap: 10px; /* Espacement entre les boutons */
+            margin-top: 15px;
+    }
+
+        .button-group .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            color: white;
+        }
+
+        .button-group .btn.btn-primary {
+            background-color: #007BFF;
+        }
+
+        .button-group .btn.btn-success {
+            background-color: #28A745;
+        }
+
+        /* Styles pour les images */
+        .project-content img {
+            width: 100%;  /* Assure que l'image prend toute la largeur du conteneur */
+            max-width: 800px;  /* Limite la largeur maximale à 800px */
+            height: auto;  /* Ajuste la hauteur automatiquement pour garder les proportions */
+            display: block;
+            margin: 0 auto;  /* Centrer les images */
+        }
+
+                /* Améliorer la lisibilité des titres */
+        .project-title, h1 {
+            font-size: 28px; /* Augmenter la taille des titres */
+            font-weight: bold;
+            line-height: 1.5;
+        }
+
+        /* État de survol pour les boutons */
+        button:hover {
+            background-color: #0056b3;
+            color: white;
+        }
+
+        /* Style des champs de texte et labels */
+        input[type="text"], select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+        .message {
+        background-color: #83f3de;
+        border: 1px solid #f5c6cb;
+        color: #0105cf;
+        padding: 10px;
+        margin-bottom: 10px;
+        border-radius: 5px;
+}
+    </style>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.21/css/jquery.dataTables.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+</head>
+<body>
+    <nav>
+        {% if not user.is_authenticated %}
+        <a href="{% url 'inscription' %}">Inscription</a>
+        <a href="{% url 'connexion' %}">Connexion</a>
+        {% endif %}
+        {% if user.is_authenticated %}
+        <a href="{% url 'deconnexion' %}">Déconnexion</a>
+        <a href="{% url 'accueil' %}">Accueil</a>
+        <a href="{% url 'projects' %}">Projects</a>
+        {% endif %}
+
+        <form method="post" action="{% url 'cleanning' %}">
+            {% csrf_token %}
+            <input type="hidden" name="project_name" value="{{ project_name }}">
+            <input type="hidden" name="dataset_name" value="{{ dataset_name }}">
+            <div class="button-group">
+                <button type="submit" class="btn btn-primary">Revenir à vos datas</button>
+            </div>
+        </form>
+    </nav>
+
+    <div class="project-details">
+        <h1>Projet: {{ project_name }}</h1>
+        <h1>Visualisations du Dataset: {{ dataset_name }}</h1>
+        {% if action == "action3" %}
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="message {% if message.tags %} {{ message.tags }} {% endif %}">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endif %}
+    </div>
+
+    <div class="project-details">
+        <div class="project-content">
+            <h2 style="text-align: center;">Création de BoxPlot et d'Histogramme</h2>
+            <form method="post" action="{% url 'visualisation' %}">
+                {% csrf_token %}
+                <label for="columns">Colonnes disponibles :</label>
+                <input type="hidden" name="project_name" value="{{ project_name }}">
+                <input type="hidden" name="dataset_name" value="{{ dataset_name }}">
+                <select class="columns" id="columns" name="columns" multiple="multiple" style="width: 100%;">
+                    {% for col in numeric_columns %}
+                        <option value="{{ col }}">{{ col }}</option>
+                    {% endfor %}
+                    <option value="all">Toutes les colonnes</option>
+                </select>
+                
+                {% if action == "action1" %}
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="message {% if message.tags %} {{ message.tags }} {% endif %}">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endif %}
+                <div class="button-group">
+                    <button type="submit" name="action" value="action1">Exécuter</button>
+                </div>
+            </form>
+        </div>
+        {% if graph_1 %}
+            <div class="project-content">
+                <h2>Boxplot</h2>
+                <img src="data:image/png;base64,{{ graph_1 }}" alt="Boxplot" />
+                <form method="post" action="{% url 'visualisation' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="graph_data" value="{{ graph_1 }}" >
+                    <input type="hidden" name="project_name" value="{{ project_name }}">
+                    <input type="hidden" name="dataset_name" value="{{ dataset_name }}">
+                    <label for="graph_name">Nom du graphique :</label>
+                    <input type="text" id="graph_name" name="graph_name" placeholder="Entrez le nom du graphique" required>
+                    <div class="button-group">
+                        <button type="submit" name="action" value="action3">Enregistrer le Graphique</button>
+                    </div>
+                </form>
+            </div>
+    {% endif %}
+    {% if graph_2 %}        
+        <div class="project-content">
+            <h2>Histogramme</h2>
+            <img src="data:image/png;base64,{{ graph_2 }}" alt="Histogramme" />
+            <form method="post" action="{% url 'visualisation' %}">
+                {% csrf_token %}
+                <input type="hidden" name="graph_data" value="{{ graph_2 }}" >
+                <input type="hidden" name="project_name" value="{{ project_name }}">
+                <input type="hidden" name="dataset_name" value="{{ dataset_name }}">
+                <label for="graph_name">Nom du graphique :</label>
+                <input type="text" id="graph_name" name="graph_name" placeholder="Entrez le nom du graphique" required>
+                <div class="button-group">
+                    <button type="submit" name="action" value="action3">Enregistrer le Graphique</button>
+                </div>
+            </form>
+        </div>
+    {% endif %}
+    </div>
+
+    <div class="project-details">
+        <div class="project-content">
+            <h2 style="text-align: center;">Création de Matrice de Corrélation et de Scatterplot</h2>
+            <form method="post" action="{% url 'visualisation' %}">
+                {% csrf_token %}
+                <label for="columns">Colonnes disponibles :</label>
+                <input type="hidden" name="project_name" value="{{ project_name }}">
+                <input type="hidden" name="dataset_name" value="{{ dataset_name }}">
+                <select class="columns-limited" id="columns-limited" name="columns" multiple="multiple" style="width: 100%;">
+                    {% for col in numeric_columns %}
+                        <option value="{{ col }}">{{ col }}</option>
+                    {% endfor %}
+                </select>
+                {% if action == "action2" %}
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="message {% if message.tags %} {{ message.tags }} {% endif %}">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endif %}
+                <div class="button-group">
+                    <button type="submit" name="action" value="action2">Exécuter</button>
+                </div>
+            </form>
+        </div>
+        {% if scat %}
+            <div class="project-content">
+                <h2>Scatterplot</h2>
+                <img src="data:image/png;base64,{{ scat }}" alt="scat" />
+                <form method="post" action="{% url 'visualisation' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="graph_data" value="{{ scat }}" >
+                    <input type="hidden" name="project_name" value="{{ project_name }}">
+                    <input type="hidden" name="dataset_name" value="{{ dataset_name }}">
+                    <label for="graph_name">Nom du graphique :</label>
+                    <input type="text" id="graph_name" name="graph_name" placeholder="Entrez le nom du graphique" required>
+                    <div class="button-group">
+                        <button type="submit" name="action" value="action3">Enregistrer le Graphique</button>
+                    </div>
+                </form>
+            </div>
+    {% endif %}
+    {% if heatmap %}        
+        <div class="project-content">
+            <h2>Matrice de Corrélation</h2>
+            <img src="data:image/png;base64,{{ heatmap }}" alt="heatmap" />
+            <form method="post" action="{% url 'visualisation' %}">
+                {% csrf_token %}
+                <input type="hidden" name="graph_data" value="{{ heatmap }}" >
+                <input type="hidden" name="project_name" value="{{ project_name }}">
+                <input type="hidden" name="dataset_name" value="{{ dataset_name }}">
+                <label for="graph_name">Nom du graphique :</label>
+                <input type="text" id="graph_name" name="graph_name" placeholder="Entrez le nom du graphique" required>
+                <div class="button-group">
+                    <button type="submit" name="action" value="action3">Enregistrer le Graphique</button>
+                </div>
+            </form>
+        </div>
+    {% endif %}
+    </div>
+    <div class="project-details">
+        <div class="project-content">
+            <h2 style="text-align: center;">Vos graphiques</h2>
+            <form method="post" action="{% url 'visualisation' %}">
+                {% csrf_token %}
+                <label for="columns">Graphiques disponibles :</label>
+                <input type="hidden" name="project_name" value="{{ project_name }}">
+                <input type="hidden" name="dataset_name" value="{{ dataset_name }}">
+                <select class="graph" id="graph" name="graphiques" multiple="multiple" style="width: 100%;">
+                    {% for graph in saved_graphs %}
+                    <option value="{{ graph.name }}">{{ graph.name }}</option>
+                    {% endfor %}
+                </select>
+                
+                {% if action == "action4" %}
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="message {% if message.tags %} {{ message.tags }} {% endif %}">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endif %}
+                <div class="button-group">
+                    <button type="submit" name="action" value="action4">Exécuter</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    {% if graphs_to_display %}
+    <div class="project-details">
+        <div class="project-content">
+            <h2>Graphiques Sélectionnés :</h2>
+            {% if action == "action5" %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="message {% if message.tags %} {{ message.tags }} {% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+            {% endif %}
+            <ul>
+                {% for graph_name, graph_data in graphs_to_display %}
+                    <li>
+                        <h3>{{ graph_name }}</h3>
+                        <img src="data:image/png;base64,{{ graph_data }}" alt="{{ graph_name }}">
+                        <form method="post" action="{% url 'visualisation' %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="project_name" value="{{ project_name }}">
+                            <input type="hidden" name="dataset_name" value="{{ dataset_name }}">
+                            <input type="hidden" name="graph_name_to_delete" value="{{ graph_name }}">
+                            <div class="button-group">
+                                <button type="submit" name="action" value="action5">Supprimer</button>
+                            </div>
+                        </form>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    {% endif %}
+    
+ 
+    
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            // Appliquer Select2 pour les sélecteurs
+            $('#columns-limited').select2({
+                placeholder: "Sélectionnez des colonnes",
+                allowClear: true,
+                maximumSelectionLength: 2  // Limite la sélection à 2 colonnes
+            });
+        
+            $('#columns').select2({
+                placeholder: "Sélectionnez des colonnes",
+                allowClear: true
+            });
+            $('#graph').select2({
+                placeholder: "Sélectionnez un ou plusieurs graphiques",
+                allowClear: true
+            });
+                    
+            // Validation avant soumission, mais seulement pour les formulaires de heatmap et scatterplot
+            $('form').on('submit', function(event) {
+                var isHeatmapOrScatterplotForm = $(this).find('#columns-limited').length > 0;
+    
+                // Si le formulaire est pour la heatmap ou scatterplot, vérifier la sélection des colonnes
+                if (isHeatmapOrScatterplotForm) {
+                    var selectedColumns = $('#columns-limited').val();
+    
+                    // Vérifier qu'au moins deux colonnes sont sélectionnées
+                    if (!selectedColumns || selectedColumns.length < 2) {
+                        alert("Veuillez sélectionner au moins deux colonnes pour générer le graphique.");
+                        event.preventDefault(); // Empêche la soumission du formulaire
+                    }
+                }
+            });
+        
+           
+        });
+    </script>
+</body>
+</html>

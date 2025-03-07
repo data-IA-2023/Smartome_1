@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        /* Général */
+    body {
+        font-family: Arial, sans-serif;
+    }
+
+    .project-details {
+        max-width: 800px;
+        margin: 20px auto;
+        padding: 20px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        background-color: #f9f9f9;
+    }
+
+    .project-title {
+        font-size: 24px;
+        font-weight: bold;
+    }
+
+    .project-content {
+        margin-top: 20px;
+    }
+
+    .button-group {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin-top: 15px;
+    }
+
+    .button-group .btn {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        color: white;
+    }
+
+    .button-group .btn.btn-primary {
+        background-color: #007BFF;
+    }
+
+    .button-group .btn.btn-success {
+        background-color: #28A745;
+    }
+
+    /* Style des boutons radio */
+    input[type="radio"] {
+        display: none;
+    }
+
+    input[type="radio"] + label {
+        position: relative;
+        padding-left: 35px;
+        cursor: pointer;
+        font-size: 16px;
+        line-height: 20px;
+        color: #333;
+        display: inline-block;
+    }
+
+    input[type="radio"] + label::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 20px;
+        height: 20px;
+        border: 2px solid #007BFF;
+        border-radius: 50%;
+        background-color: #fff;
+        box-sizing: border-box;
+        transition: all 0.3s ease;
+    }
+
+    input[type="radio"]:checked + label::before {
+        background-color: #007BFF;
+        border-color: #007BFF;
+    }
+
+    input[type="radio"]:checked + label::after {
+        content: '';
+        position: absolute;
+        left: 6px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background-color: white;
+    }
+
+    input[type="radio"]:focus + label::before {
+        box-shadow: 0 0 0 3px rgba(0, 255, 38, 0.738);
+    }
+
+    input[type="radio"]:hover + label::before {
+        border-color: #dc0000;
+    }
+
+    /* Option désactivée (si nécessaire) */
+    input[type="radio"]:disabled + label {
+        color: #aaa;
+    }
+
+    input[type="radio"]:disabled + label::before {
+        border-color: #ddd;
+        background-color: #f2f2f2;
+    }
+    </style>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.21/css/jquery.dataTables.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+</head>
+<body>
+    <nav>
+        {% if not user.is_authenticated %}
+        <a href="{% url 'inscription' %}">Inscription</a>
+        <a href="{% url 'connexion' %}">Connexion</a>
+        {% endif %}
+        {% if user.is_authenticated %}
+        <a href="{% url 'deconnexion' %}">Déconnexion</a>
+        <a href="{% url 'accueil' %}">Accueil</a>
+        <a href="{% url 'projects' %}">Projects</a>
+        {% endif %}
+        <form method="post" action="{% url 'cleanning' %}">
+            {% csrf_token %}
+            <input type="hidden" name="project_name" value="{{ project_name }}">
+            <input type="hidden" name="dataset_name" value="{{ dataset_name }}">
+            <div class="button-group">
+                <button type="submit" class="btn btn-primary">Revenir à vos datas</button>
+            </div>
+        </form>
+    </nav>
+
+    <div class="project-details">
+        <h1>Projet: {{ project_name }}</h1>
+        <h1>Nettoyage du Dataset: {{ dataset_name }}</h1>
+    </div>
+
+    <div class="project-details">
+        <div class="project-content">
+            <h2 style="text-align: center;">Choix de la cible et des données</h2>
+            <form method="post" action="{% url 'modelisation' %}">
+                {% csrf_token %}
+                <label for="columns">Colonne pour la cible :</label>
+                <input type="hidden" name="project_name" value="{{ project_name }}">
+                <input type="hidden" name="dataset_name" value="{{ dataset_name }}">
+                <select class="columns-limited" id="target" name="target" multiple="multiple" style="width: 100%;" required>
+                    {% for col in columns %}
+                        <option value="{{ col }}">{{ col }}</option>
+                    {% endfor %}
+                </select>
+                <label for="columns">Colonnes pour les features :</label>
+                <select class="columns" id="features" name="features" multiple="multiple" style="width: 100%;" required>
+                    {% for col in columns %}
+                        <option value="{{ col }}">{{ col }}</option>
+                    {% endfor %}
+                </select>
+
+
+                <h2 style="text-align: center;">Choix du Modèle</h2>
+
+                <!-- Choix entre "Grid Search" et "Sélectionner un modèle" -->
+                <label>Mode de sélection du modèle :</label><br>
+                <input type="radio" id="grid_search" name="model_selection" value="grid_search" checked>
+                <label for="grid_search">Utiliser Grid Search (choix automatique du modèle)</label>
+                
+                <input type="radio" id="manual_model" name="model_selection" value="manual_model">
+                <label for="manual_model">Sélectionner un modèle spécifique</label>
+                
+                <!-- Sélection du modèle (masqué si Grid Search est sélectionné) -->
+                <div id="model-selection" style="display: none; margin-top: 15px;">
+                    <label for="model">Choisissez un modèle :</label>
+                    <select class="liste_modele" id="model" name="model" multiple="multiple" style="width: 100%;">
+                        {% for model_name in models.keys %}
+                            <option value="{{ model_name }}">{{ model_name|title }}</option>
+                        {% endfor %}
+                    </select>
+                
+                    <hr>
+                
+                    <h2 style="text-align: center;">Paramètres du modèle</h2>
+                
+                    <!-- Choix entre réglage automatique et manuel -->
+                    <label>Réglage des hyperparamètres :</label><br>
+                    <input type="radio" id="auto" name="param_mode" value="auto" checked>
+                    <label for="auto">Automatique</label>
+                
+                    <input type="radio" id="manual" name="param_mode" value="manual">
+                    <label for="manual">Manuel</label>
+                
+                    <!-- Paramètres automatiques -->
+                    <div id="auto-params" style="display: block; margin-top: 15px;">
+                        <div class="auto-param-fields" id="auto-param-fields"></div>
+                    </div>
+                
+                    <!-- Paramètres manuels -->
+                    <div id="manual-params" style="display: none; margin-top: 15px;">
+                        <div class="param-fields" id="param-fields"></div>
+                    </div>
+                </div>
+               
+
+                <div class="button-group">
+                    <button type="submit">🚀 Lancer l'entraînement</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+            {% if messages %}
+            <div class="project-details">
+                <div class="project-content">
+        
+            {% for message in messages %}
+                <div class="message {% if message.tags %} {{ message.tags }} {% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+            {% endif %}
+        
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    <script>
+   $(document).ready(function() {
+    function initSelect2() {
+        $('select').not('.select2-hidden-accessible').select2({
+            placeholder: "Sélectionnez une option",
+            allowClear: true,
+            width: '100%',
+            minimumResultsForSearch: Infinity
+        });
+    }
+
+    $('.columns').select2({
+        placeholder: "Sélectionnez des colonnes",
+        allowClear: true,
+        width: '100%',
+        minimumResultsForSearch: Infinity
+    });
+
+    $('.columns-limited').select2({
+        placeholder: "Sélectionnez une colonne",
+        allowClear: true,
+        maximumSelectionLength: 1,
+        width: '100%',
+        minimumResultsForSearch: Infinity
+    });
+
+    $('.liste_modele').select2({
+        placeholder: "Sélectionnez un modèle",
+        allowClear: true,
+        maximumSelectionLength: 1,
+        width: '100%',
+        minimumResultsForSearch: Infinity
+    });
+
+    var paramGrid = JSON.parse('{{ param_grid|escapejs }}');
+
+    function showAutoParams(modelName) {
+        var paramContainer = $('.auto-param-fields');
+        paramContainer.empty();
+
+        if (paramGrid[modelName]) {
+            Object.keys(paramGrid[modelName]).forEach(param => {
+                var values = paramGrid[modelName][param];
+                var defaultValue = values[0];
+                var html = `<p><strong>${param} :</strong> ${defaultValue}</p>`;
+                paramContainer.append(html);
+            });
+        }
+    }
+
+    function showManualParams(modelName) {
+        var paramContainer = $('.param-fields');
+        paramContainer.empty();
+
+        if (paramGrid[modelName]) {
+            Object.keys(paramGrid[modelName]).forEach(param => {
+                var values = paramGrid[modelName][param];
+                var selectHTML = `<label for="${param}">${param} :</label>
+                                  <select name="${param}" id="${param}" style="width: 100%;">`;
+
+                values.forEach(value => {
+                    selectHTML += `<option value="${value}">${value}</option>`;
+                });
+
+                selectHTML += `</select><br>`;
+                paramContainer.append(selectHTML);
+            });
+
+            initSelect2();
+        }
+    }
+
+    $('#model').change(function() {
+        var selectedModel = $(this).val();
+        if ($('input[name="param_mode"]:checked').val() === 'auto') {
+            showAutoParams(selectedModel);
+        } else {
+            showManualParams(selectedModel);
+        }
+    });
+
+    $('input[name="param_mode"]').change(function() {
+        var selectedModel = $('#model').val();
+        if ($(this).val() === 'auto') {
+            $('#manual-params').hide();
+            $('#auto-params').show();
+            showAutoParams(selectedModel);
+        } else {
+            $('#auto-params').hide();
+            $('#manual-params').show();
+            showManualParams(selectedModel);
+        }
+    });
+
+    $('input[name="model_selection"]').change(function() {
+        if ($(this).val() === 'manual_model') {
+            $('#model-selection').show();
+        } else {
+            $('#model-selection').hide();
+        }
+    });
+
+    // Masquer la sélection du modèle par défaut car "Grid Search" est coché
+    $('#model-selection').hide();
+});
+
+    </script>
+</body>
+</html>

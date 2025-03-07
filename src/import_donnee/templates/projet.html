@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mes projets</title>
+    <style>
+        .project-card {
+            display: inline-block;
+            width: 150px;
+            height: 150px;
+            background-color: #f4f4f4;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            overflow: hidden; /* Cache le contenu qui dépasse */
+            text-overflow: ellipsis; /* Ajoute des points de suspension si le texte est trop long */
+            white-space: nowrap; /* Empêche le texte de passer à la ligne */
+        }
+
+        .project-card:hover {
+        background-color: #e0e0e0;
+        transform: scale(1.05);
+        }
+
+        form {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="{% url 'accueil' %}">Accueil</a>
+        {% if not user.is_authenticated %}
+        <a href="{% url 'inscription' %}">Inscription</a>
+        {% endif %}
+        {% if not user.is_authenticated %}
+        <a href="{% url 'connexion' %}">Connexion</a>
+        {% endif %}
+        {% if user.is_authenticated %}
+        <a href="{% url 'deconnexion' %}">Déconnexion</a>
+        {% endif %}
+    
+</nav>
+
+<h1>Mes projets</h1>
+<form method="POST" action="{% url 'projet_data' %}">
+    {% csrf_token %}
+    {% for projet in projects %}
+        <button type="submit" name="projet_name" value="{{ projet.name }}" 
+                class="project-card">
+            {{ projet.name }}
+        </button>
+    {% endfor %}
+</form>
+</body>
+</html>
+
+
+
+   
